@@ -8,11 +8,8 @@ import USDC from "./USDC"
 import Datetime from 'react-datetime';
 import moment from 'moment';
 import Web3 from 'web3';
-import Web3Modal from "web3modal";
-import Portis from "@portis/web3";
 import Biconomy from "@biconomy/mexa";
 
-const portisDappId = '8ec2675d-95be-4b16-85ea-88cbe9345e94';
 const sablierAddress = '0xc04Ad234E01327b24a831e3718DBFcbE245904CC';
 const usdcAddress = '0x07865c6E87B9F70255377e024ace6630C1Eaa37F';
 const usdcFaucetAddress = '0x34bE201A6d1CBB71Bff0C07161a61662295eE56D';
@@ -43,21 +40,12 @@ class App extends React.Component {
         loadingSend: false
     };
 
-    web3Modal = new Web3Modal({
-        network: "ropsten", // optional
-        cacheProvider: true, // optional
-        providerOptions: {
-            portis: {
-                package: Portis, // required
-                options: {
-                    id: portisDappId // required
-                }
-            }
-        }
-    });
-
     async login() {
-        const provider = await this.web3Modal.connect();
+        if(!window.ethereum){
+            alert('Metamask is not installed!');
+            return
+        }
+        const provider = window.ethereum;
         await this.subscribeProvider(provider);
         let web3;
         if (!biconomyEnabled) {
@@ -66,6 +54,7 @@ class App extends React.Component {
             const biconomy = new Biconomy(provider, {apiKey: biconomyAPIKey});
             web3 = new Web3(biconomy);
         }
+        window.ethereum.enable();
         const accounts = await web3.eth.getAccounts();
         const address = accounts[0];
         const networkId = await web3.eth.net.getId();
@@ -118,7 +107,6 @@ class App extends React.Component {
         if (web3 && web3.currentProvider && web3.currentProvider.close) {
             await web3.currentProvider.close();
         }
-        await this.web3Modal.clearCachedProvider();
         this.setState({account: '', web3: '', provider: ''});
     };
 
@@ -485,9 +473,7 @@ class App extends React.Component {
     }
 
     async componentWillMount() {
-        if (this.web3Modal.cachedProvider) {
-            this.login();
-        }
+
     }
 
     render() {
