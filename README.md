@@ -3,6 +3,9 @@ Easily send, receive or stream crypto dollars (USDC) using Mainstream Crypto. Se
 ether since it uses meta transactions powered by Biconomy. It uses transferWithAuthorization for sending USDC and permit for stream token approval. 
 USDC stream is powered using Sablier. It supports Portis login for the best user experience.
 
+## App Link
+https://mainstreamcrypto.netlify.app/ (Ropsten Network) 
+
 ## Getting Started
 
 1) Clone the repo
