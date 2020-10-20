@@ -6,6 +6,12 @@ USDC stream is powered using Sablier.
 ## App Link
 https://mainstreamcrypto.netlify.app/ (Ropsten Network) 
 
+## Screenshots
+
+![](screenshots/mainstream_crypto_1.png)
+
+![](screenshots/mainstream_crypto_2.png)
+
 ## Getting Started
 
 1) Clone the repo
