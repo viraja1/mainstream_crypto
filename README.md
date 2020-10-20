@@ -27,7 +27,7 @@ https://mainstreamcrypto.netlify.app/ (Ropsten Network)
 
 4) Register the app on the Biconomy Dashboard and whitelist USDC methods 
    for meta transactions (transferWithAuthorization and permit). 
-   Then update the biconomyAPIKey in src/App.js
+   Then update the biconomyAPIKey, transferWithAuthorizationApiId and permitApiId in src/App.js
 
    https://dashboard.biconomy.io/
     
