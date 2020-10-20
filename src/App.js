@@ -8,13 +8,18 @@ import USDC from "./USDC"
 import Datetime from 'react-datetime';
 import moment from 'moment';
 import Web3 from 'web3';
-import Biconomy from "@biconomy/mexa";
 
+const expectedBlockTime = 13000;
 const sablierAddress = '0xc04Ad234E01327b24a831e3718DBFcbE245904CC';
 const usdcAddress = '0x07865c6E87B9F70255377e024ace6630C1Eaa37F';
 const usdcFaucetAddress = '0x34bE201A6d1CBB71Bff0C07161a61662295eE56D';
 const biconomyAPIKey = '';
-const biconomyEnabled = true;
+const transferWithAuthorizationApiId = '';
+const permitApiId = '';
+
+const sleep = (milliseconds) => {
+    return new Promise(resolve => setTimeout(resolve, milliseconds))
+};
 
 
 class App extends React.Component {
@@ -47,13 +52,7 @@ class App extends React.Component {
         }
         const provider = window.ethereum;
         await this.subscribeProvider(provider);
-        let web3;
-        if (!biconomyEnabled) {
-            web3 = new Web3(provider);
-        } else {
-            const biconomy = new Biconomy(provider, {apiKey: biconomyAPIKey});
-            web3 = new Web3(biconomy);
-        }
+        let web3 = new Web3(provider);
         window.ethereum.enable();
         const accounts = await web3.eth.getAccounts();
         const address = accounts[0];
@@ -241,11 +240,35 @@ class App extends React.Component {
             const v = "0x" + signature.slice(130, 132);
             const r = signature.slice(0, 66);
             const s = "0x" + signature.slice(66, 130);
-            await ERC20Contract.methods.transferWithAuthorization(this.state.account, sendAddress, amount, validAfter, validBefore, nonce, v, r, s)
-                .send({from: this.state.account});
+            // await ERC20Contract.methods.transferWithAuthorization(this.state.account, sendAddress, amount,
+            //     validAfter, validBefore, nonce, v, r, s).send({from: this.state.account});
+            const postData = {
+                to: usdcAddress,
+                apiId: transferWithAuthorizationApiId,
+                params: [this.state.account, sendAddress, amount, validAfter, validBefore, nonce, v, r, s],
+                from: this.state.account
+            };
+            const response = await fetch('https://api.biconomy.io/api/v2/meta-tx/native', {
+                method: 'POST',
+                mode: 'cors',
+                cache: 'no-cache',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': biconomyAPIKey
+                },
+                body: JSON.stringify(postData)
+            });
+            const responseData = await response.json();
+            console.log(responseData);
+            const txHash = responseData["txHash"];
+            let transactionReceipt = null;
+            while (transactionReceipt == null) {
+                transactionReceipt = await this.state.web3.eth.getTransactionReceipt(txHash);
+                await sleep(expectedBlockTime)
+            }
         } catch (e) {
             console.log(e);
-            alert('Send Token failed');
+            alert('Send Payment failed');
         }
         await this.updateTokenBalances();
         this.setState({loadingSend: false});
@@ -402,8 +425,32 @@ class App extends React.Component {
             const v = "0x" + signature.slice(130, 132);
             const r = signature.slice(0, 66);
             const s = "0x" + signature.slice(66, 130);
-            await erc20Contract.methods.permit(this.state.account, sablierAddress, amount, deadline, v, r, s)
-                .send({from: this.state.account});
+            // await erc20Contract.methods.permit(this.state.account, sablierAddress, amount, deadline, v, r, s)
+            //     .send({from: this.state.account});
+            const postData = {
+                to: usdcAddress,
+                apiId: permitApiId,
+                params: [this.state.account, sablierAddress, amount,  deadline, v, r, s],
+                from: this.state.account
+            };
+            const response = await fetch('https://api.biconomy.io/api/v2/meta-tx/native', {
+                method: 'POST',
+                mode: 'cors',
+                cache: 'no-cache',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': biconomyAPIKey
+                },
+                body: JSON.stringify(postData)
+            });
+            const responseData = await response.json();
+            console.log(responseData);
+            const txHash = responseData["txHash"];
+            let transactionReceipt = null;
+            while (transactionReceipt == null) {
+                transactionReceipt = await this.state.web3.eth.getTransactionReceipt(txHash);
+                await sleep(expectedBlockTime)
+            }
         } catch (e) {
             console.log(e);
             alert('Create Stream Failed');
@@ -416,6 +463,7 @@ class App extends React.Component {
             let streamId = data.events.CreateStream.returnValues.streamId;
             this.setState({streamId: streamId.toString()});
         } catch (e) {
+            alert('Create Stream Failed');
             console.log(e);
         }
         await this.updateTokenBalances();
@@ -470,10 +518,6 @@ class App extends React.Component {
         }
         await this.updateTokenBalances();
         this.setState({loadingWithdrawStream: false});
-    }
-
-    async componentWillMount() {
-
     }
 
     render() {
