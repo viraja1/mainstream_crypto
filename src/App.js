@@ -593,7 +593,7 @@ class App extends React.Component {
                                        onChange={e => this.updateSendAmount(e.target.value)}/>
                             </div>
                             <div style={{marginBottom: "10px"}}>
-                                <input className="form-control" type="text" placeholder="Ethereum Address"
+                                <input className="form-control" type="text" placeholder="Recipient Address"
                                        value={this.state.sendAddress}
                                        onChange={e => this.updateSendAddress(e.target.value)}/>
                             </div>
